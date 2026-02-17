@@ -23,6 +23,7 @@ This endpoint accepts the following optional query string parameters:
 
 // current deals on the page
 let currentDeals = [];
+let currentSales = [];
 let currentPagination = {};
 
 // instantiate the selectors
@@ -31,7 +32,16 @@ const selectPage = document.querySelector('#page-select');
 const selectLegoSetIds = document.querySelector('#lego-set-id-select');
 const sectionDeals= document.querySelector('#deals');
 const spanNbDeals = document.querySelector('#nbDeals');
+const spanNbSales = document.querySelector('#nbSales');
+const spanAverageSales = document.querySelector('#averageSales');
+const spanP5Sales = document.querySelector('#p5Sales');
+const spanP25Sales = document.querySelector('#p25Sales');
+const spanP50Sales = document.querySelector('#p50Sales');
+const spanLifetimeValue = document.querySelector('#lifetimeValue');
 const buttonBestDiscount = document.querySelector('#filter-best-discount');
+const buttonHotDeals = document.querySelector('#filter-hot-deals');
+const buttonFavorite = document.querySelector('#filter-favorite');
+const selectSort = document.querySelector('#sort-select');
 
 /**
  * Set global value
@@ -69,18 +79,46 @@ const fetchDeals = async (page = 1, size = 6) => {
 };
 
 /**
+ * Fetch sales from api
+ * @param  {String} id - lego set id
+ * @return {Object}
+ */
+const fetchSales = async (id) => {
+  try {
+    const response = await fetch(
+      `https://lego-api-blue.vercel.app/sales?id=${id}`
+    );
+    const body = await response.json();
+
+    if (body.success !== true) {
+      console.error(body);
+      return [];
+    }
+
+    return body.data.result;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
+
+/**
  * Render list of deals
  * @param  {Array} deals
  */
 const renderDeals = deals => {
+  const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
   const fragment = document.createDocumentFragment();
   const div = document.createElement('div');
   const template = deals
     .map(deal => {
+      const isFavorite = favorites.includes(deal.uuid);
+      const favoriteBtn = isFavorite ? '❤️' : '🤍';
       return `
       <div class="deal" id=${deal.uuid}>
         <span>${deal.id}</span>
-        <a href="${deal.link}">${deal.title}</a>
+        <button class="favorite" data-uuid="${deal.uuid}">${favoriteBtn}</button>
+        <a href="${deal.link}" target="_blank">${deal.title}</a>
         <span>${deal.price}</span>
       </div>
     `;
@@ -91,6 +129,59 @@ const renderDeals = deals => {
   fragment.appendChild(div);
   sectionDeals.innerHTML = '<h2>Deals</h2>';
   sectionDeals.appendChild(fragment);
+};
+
+/**
+ * Render list of sales
+ * @param  {Array} sales
+ */
+const renderSales = sales => {
+  const fragment = document.createDocumentFragment();
+  const div = document.createElement('div');
+  const template = sales
+    .map(sale => {
+      return `
+      <div class="sale" id=${sale.uuid}>
+        <span>${sale.title}</span>
+        <a href="${sale.link}" target="_blank">${sale.price}</a>
+      </div>
+    `;
+    })
+    .join('');
+
+  div.innerHTML = template;
+  fragment.appendChild(div);
+  sectionDeals.innerHTML = '<h2>Vinted Sales</h2>';
+  sectionDeals.appendChild(fragment);
+};
+
+/**
+ * Render sales indicators
+ * @param  {Array} sales
+ */
+const renderSalesIndicators = (sales = []) => {
+  spanNbSales.innerHTML = sales.length;
+
+  const prices = sales.map(sale => parseFloat(sale.price)).sort((a, b) => a - b);
+
+  if (prices.length === 0) {
+    spanAverageSales.innerHTML = 0;
+    spanP5Sales.innerHTML = 0;
+    spanP25Sales.innerHTML = 0;
+    spanP50Sales.innerHTML = 0;
+    spanLifetimeValue.innerHTML = 0;
+    return;
+  }
+
+  const average = prices.reduce((a, b) => a + b, 0) / prices.length;
+
+  spanAverageSales.innerHTML = average.toFixed(2);
+  spanP5Sales.innerHTML = prices[Math.ceil(prices.length * 0.05) - 1];
+  spanP25Sales.innerHTML = prices[Math.ceil(prices.length * 0.25) - 1];
+  spanP50Sales.innerHTML = prices[Math.ceil(prices.length * 0.50) - 1];
+
+  const dates = sales.map(sale => new Date(sale.published)).sort((a, b) => a - b);
+  spanLifetimeValue.innerHTML = `${Math.ceil((new Date() - dates[0]) / (1000 * 60 * 60 * 24))} days`;
 };
 
 /**
@@ -166,8 +257,75 @@ selectPage.addEventListener('change', async (event) => {
  * Filter by best discount
  */
 buttonBestDiscount.addEventListener('click', () => {
-  const filteredDeals = currentDeals.filter(deal => deal.discount > 50);
+  const filteredDeals = currentDeals.filter(deal => deal.discount > 5);
   render(filteredDeals, currentPagination);
+});
+
+/**
+ * Filter by hot deals
+ */
+buttonHotDeals.addEventListener('click', () => {
+  const filteredDeals = currentDeals.filter(deal => deal.temperature > 100);
+  render(filteredDeals, currentPagination);
+});
+
+/**
+ * Display sales for a specific lego set id
+ */
+selectLegoSetIds.addEventListener('change', async (event) => {
+  const sales = await fetchSales(event.target.value);
+  currentSales = sales;
+  renderSales(currentSales);
+  renderSalesIndicators(currentSales);
+});
+
+/**
+ * Save as favorite
+ */
+sectionDeals.addEventListener('click', (event) => {
+  const target = event.target;
+  if (target.classList.contains('favorite')) {
+    const uuid = target.dataset.uuid;
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const index = favorites.indexOf(uuid);
+
+    if (index > -1) {
+      favorites.splice(index, 1);
+    } else {
+      favorites.push(uuid);
+    }
+
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    render(currentDeals, currentPagination);
+  }
+});
+
+/**
+ * Filter by favorite
+ */
+buttonFavorite.addEventListener('click', () => {
+  const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+  const filteredDeals = currentDeals.filter(deal => favorites.includes(deal.uuid));
+  render(filteredDeals, currentPagination);
+});
+
+/**
+ * Sort by price
+ */
+selectSort.addEventListener('change', (event) => {
+  const sort = event.target.value;
+
+  if (sort === 'price-asc') {
+    currentDeals.sort((a, b) => a.price - b.price);
+  } else if (sort === 'price-desc') {
+    currentDeals.sort((a, b) => b.price - a.price);
+  } else if (sort === 'date-asc') {
+    currentDeals.sort((a, b) => a.published - b.published);
+  } else if (sort === 'date-desc') {
+    currentDeals.sort((a, b) => b.published - a.published);
+  }
+
+  render(currentDeals, currentPagination);
 });
 
 document.addEventListener('DOMContentLoaded', async () => {

@@ -3,6 +3,145 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>🧱 Lego | Predictability of a lego set deal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      :root {
+        --primary-color: #e3000b;
+        --bg-color: #f4f4f4;
+        --card-bg: #ffffff;
+        --text-color: #333;
+        --border-color: #ddd;
+      }
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      h1 {
+        text-align: center;
+        color: var(--primary-color);
+        margin-bottom: 30px;
+      }
+      h2 {
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 10px;
+        margin-top: 0;
+      }
+      section {
+        background-color: var(--card-bg);
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+      #options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: space-between;
+        align-items: center;
+      }
+      #options > div {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      button, select {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: white;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        background-color: #f0f0f0;
+        border-color: #bbb;
+      }
+      #filters button {
+        margin-right: 5px;
+      }
+      #indicators {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+      }
+      #indicators div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 10px;
+        background-color: var(--bg-color);
+        border-radius: 6px;
+      }
+      #indicators span:first-child {
+        font-size: 0.9em;
+        color: #666;
+        margin-bottom: 5px;
+      }
+      #indicators span:last-child {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: var(--primary-color);
+      }
+      #deals > div {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+      }
+      .deal, .sale {
+        background-color: white;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        transition: transform 0.2s;
+      }
+      .deal:hover, .sale:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      }
+      .deal span:first-child {
+        font-size: 0.8em;
+        color: #888;
+        margin-bottom: 5px;
+      }
+      .deal a, .sale a {
+        text-decoration: none;
+        color: #007bff;
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: block;
+      }
+      .deal a:hover, .sale a:hover {
+        text-decoration: underline;
+      }
+      .deal span:last-child, .sale a:last-child {
+        font-weight: bold;
+        color: #28a745;
+        font-size: 1.1em;
+        margin-top: auto;
+      }
+      .favorite {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 1.2em;
+        padding: 0;
+      }
+      .favorite:hover {
+        background: none;
+        transform: scale(1.1);
+      }
+    </style>
   </head>
   <body>
     <h1>Lego</h1>
@@ -20,17 +159,18 @@
         <select name="page" id="page-select"> </select>
       </div>
       <div id="filters">
-        <span>By best discount</span>
-        <span>By most commented</span>
-        <span>By hot deals</span>
+        <button id="filter-best-discount">By best discount</button>
+        <button id="filter-most-commented">By most commented</button>
+        <button id="filter-hot-deals">By hot deals</button>
+        <button id="filter-favorite">By favorite</button>
       </div>
       <div id="sort">
         <label for="sort-select">Sort:</label>
         <select name="sort" id="sort-select">
           <option value="price-asc">Cheaper</option>
           <option value="price-desc">Expensive</option>
-          <option value="date-asc">Recently published</option>
-          <option value="date-desc">Anciently published</option>
+          <option value="date-desc">Recently published</option>
+          <option value="date-asc">Anciently published</option>
         </select>
       </div>
     </section>
@@ -52,20 +192,24 @@
         <span id="nbSales">0</span>
       </div>
       <div>
+        <span>Average sales price value</span>
+        <span id="averageSales">0</span>
+      </div>
+      <div>
         <span>p5 sales price value</span>
-        <span>0</span>
+        <span id="p5Sales">0</span>
       </div>
       <div>
         <span>p25 sales price value</span>
-        <span>0</span>
+        <span id="p25Sales">0</span>
       </div>
       <div>
         <span>p50 sales price value</span>
-        <span>0</span>
+        <span id="p50Sales">0</span>
       </div>
       <div>
         <span>Lifetime value</span>
-        <span>10 days</span>
+        <span id="lifetimeValue">0 days</span>
       </div>
     </section>
     <section id="deals"></section>
