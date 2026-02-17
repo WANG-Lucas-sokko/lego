@@ -72,6 +72,7 @@ for (const name of communityNames) {
     uniqueNames.push(name);
   }
 }
+
 console.log('Number of communities:',uniqueNames.length);
 
 // 🎯 TODO 4: Sort by price
@@ -135,11 +136,11 @@ console.table(dealsSortedByDate);
 // 2. Log the list
 console.log('\nTODO 6: Filter 50% - 75% Discount');
 
-function filterHighDiscount(items) {
+function filterHighDiscount(items, min , max) {
   const filteredList = [];
 
   for (const deal of items) {
-    if (deal.discount >= 50 && deal.discount <= 75) {
+    if (deal.discount >= min && deal.discount <= max) {
       filteredList.push(deal);
     }
   }
@@ -147,7 +148,7 @@ function filterHighDiscount(items) {
   return filteredList;
 }
 
-const highDiscountDeals = filterHighDiscount(deals);
+const highDiscountDeals = filterHighDiscount(deals, 50, 75);
 console.table(highDiscountDeals);
 
 

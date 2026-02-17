@@ -31,6 +31,7 @@ const selectPage = document.querySelector('#page-select');
 const selectLegoSetIds = document.querySelector('#lego-set-id-select');
 const sectionDeals= document.querySelector('#deals');
 const spanNbDeals = document.querySelector('#nbDeals');
+const buttonBestDiscount = document.querySelector('#filter-best-discount');
 
 /**
  * Set global value
@@ -149,6 +150,24 @@ selectShow.addEventListener('change', async (event) => {
 
   setCurrentDeals(deals);
   render(currentDeals, currentPagination);
+});
+
+/**
+ * Select the page to display
+ */
+selectPage.addEventListener('change', async (event) => {
+  const deals = await fetchDeals(parseInt(event.target.value), parseInt(selectShow.value));
+
+  setCurrentDeals(deals);
+  render(currentDeals, currentPagination);
+});
+
+/**
+ * Filter by best discount
+ */
+buttonBestDiscount.addEventListener('click', () => {
+  const filteredDeals = currentDeals.filter(deal => deal.discount > 50);
+  render(filteredDeals, currentPagination);
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
