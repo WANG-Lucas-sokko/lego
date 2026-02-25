@@ -72,7 +72,6 @@ for (const name of communityNames) {
     uniqueNames.push(name);
   }
 }
-
 console.log('Number of communities:',uniqueNames.length);
 
 // 🎯 TODO 4: Sort by price
